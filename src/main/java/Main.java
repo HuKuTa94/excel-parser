@@ -47,22 +47,12 @@ public class Main
 
             // E16 - car number
             Cell cell = sheet.getRow( CAR_NUMBER_ROW ).getCell( CAR_NUMBER_CELL );
-            try {
-                order.setCarNumber( cell.getStringCellValue() );
-            } catch ( IllegalStateException e ) {
-                order.setCarNumber(
-                        String.valueOf( cell.getNumericCellValue() ));
-            }
+            order.setCarNumber( getStringValueFromCell( cell ));
 
 
             // E18 - order number
             cell = sheet.getRow( ORDER_NUMBER_ROW ).getCell( ORDER_NUMBER_CELL );
-            try {
-                order.setOrderNumber( cell.getStringCellValue() );
-            } catch ( IllegalStateException e ) {
-                order.setOrderNumber(
-                        String.valueOf( cell.getNumericCellValue() ));
-            }
+            order.setOrderNumber( getStringValueFromCell( cell ));
 
 
             // Get positions (item properties) from excel
@@ -86,20 +76,11 @@ public class Main
                         if( cell.toString().contains( "TOTAL" ))
                         {
                             cell = row.getCell( TOTAL_CELL_BATTERIES );
-                            try {
-                                order.setBatteriesTotal( cell.getNumericCellValue() );
-                            } catch ( IllegalStateException e ) {
-                                order.setBatteriesTotal(
-                                        Double.parseDouble( cell.getStringCellValue() ));
-                            }
+                            order.setBatteriesTotal( getNumericValueFromCell( cell ));
 
                             cell = row.getCell( TOTAL_CELL_PALLETS );
-                            try {
-                                order.setPalletsTotal( cell.getNumericCellValue() );
-                            } catch ( IllegalStateException e ) {
-                                order.setPalletsTotal(
-                                        Double.parseDouble( cell.getStringCellValue() ));
-                            }
+                            order.setPalletsTotal( getNumericValueFromCell( cell ));
+
                             break;
                         }
                     }
@@ -114,38 +95,18 @@ public class Main
 
                 // B23 - barcode
                 cell = row.getCell( POSITIONS_CELL_ITEM_BARCODE );
-                try {
-                    position.setItemBarcode( cell.getStringCellValue() );
-                } catch ( IllegalStateException e ) {
-                    position.setItemBarcode(
-                            String.valueOf( cell.getNumericCellValue() ));
-                }
+                position.setItemBarcode( getStringValueFromCell( cell ));
 
 
                 // C23 - battery count
                 cell = row.getCell( POSITIONS_CELL_BATTERIES_TOTAL );
-                try {
-                    position.setBatteryCount( cell.getNumericCellValue() );
-                } catch ( IllegalStateException e ) {
-                    position.setBatteryCount(
-                            Double.parseDouble( cell.getStringCellValue() ));
-                }
+                position.setBatteryCount( getNumericValueFromCell( cell ));
+
 
                 // G23 - pallet count
                 cell = row.getCell( POSITIONS_CELL_PALLET_TOTAL );
-                try {
-                    position.setPalletCount( cell.getNumericCellValue() );
-                } catch ( IllegalStateException e )
-                {
-                    // Put 0 if cell has text
-                    if( cell.toString().length() > 5 ) {
-                        position.setPalletCount( 0 );
-                    }
-                    else {
-                        position.setPalletCount(
-                                Double.parseDouble( cell.getStringCellValue() ));
-                    }
-                }
+                position.setPalletCount( getNumericValueFromCell( cell ));
+
 
                 // Add item to position list of result DTO
                 order.getPositions().add( position );
@@ -161,6 +122,38 @@ public class Main
         catch ( IOException e )
         {
             System.err.println( "Impossible close the excel file! Maybe file used by other process!" );
+        }
+    }
+
+    private static double getNumericValueFromCell( Cell cell ) {
+        // Try to get numeric value from the cell
+        try {
+            return cell.getNumericCellValue();
+        }
+
+        // Cell has text type value
+        catch ( IllegalStateException illegalStateException )
+        {
+            // Try parse number from text type (text contains a number)
+            try {
+                return Double.parseDouble( cell.getStringCellValue() );
+            }
+
+            // Text not contains a number, return zero
+            catch ( NumberFormatException numberFormatException ) {
+                return 0.0;
+            }
+        }
+    }
+
+    private static String getStringValueFromCell( Cell cell ) {
+        // Try to get string value from the cell
+        try {
+            return cell.getStringCellValue();
+        }
+        // Cell has numeric type value
+        catch ( IllegalStateException e ) {
+            return String.valueOf( cell.getNumericCellValue() );
         }
     }
 }
