@@ -37,11 +37,11 @@ public class Order
 
 
     public boolean checkBatteriesTotal() {
-        return batteriesTotal == getBatteriesSum();
+        return (int) batteriesTotal == (int) getBatteriesSum();
     }
 
     public boolean checkPalletsTotal() {
-        return palletsTotal == getPalletsSum();
+        return (int) palletsTotal == (int) getPalletsSum();
     }
 
     private double getPalletsSum() {
