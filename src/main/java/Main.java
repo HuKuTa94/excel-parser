@@ -22,7 +22,6 @@ public class Main
 
     // Position cells
     public static final short POSITIONS_ROW_START = 22;
-    public static final short POSITIONS_ROW_END = 1000;
     public static final short POSITIONS_CELL_ITEM_NAME = 0;
     public static final short POSITIONS_CELL_ITEM_BARCODE = 1;
     public static final short POSITIONS_CELL_BATTERIES_TOTAL = 2;
@@ -44,11 +43,9 @@ public class Main
             // Result data object of the order
             Order order = new Order();
 
-
             // E16 - car number
             Cell cell = sheet.getRow( CAR_NUMBER_ROW ).getCell( CAR_NUMBER_CELL );
             order.setCarNumber( getStringValueFromCell( cell ));
-
 
             // E18 - order number
             cell = sheet.getRow( ORDER_NUMBER_ROW ).getCell( ORDER_NUMBER_CELL );
@@ -56,62 +53,56 @@ public class Main
 
 
             // Get positions (item properties) from excel
-            int rowEnd = Math.max( POSITIONS_ROW_END, sheet.getLastRowNum() );
-            for ( int rowNum = POSITIONS_ROW_START; rowNum < rowEnd; rowNum++ )
-            {
+            int rowNum = POSITIONS_ROW_START;
+            do {
                 // Get row of the position
                 Row row = sheet.getRow( rowNum );
 
-                // Get the first cell
-                cell = row.getCell( POSITIONS_CELL_ITEM_NAME );
-
-                // There are no more item positions
-                if( cell.getStringCellValue().isEmpty() )
-                {
-                    // Try find "TOTAL" row
-                    for( int rowTotal = rowNum; rowTotal < rowEnd; rowTotal++ )
-                    {
-                        row = sheet.getRow( rowTotal );
-                        cell = row.getCell( TOTAL_CELL_NAME );
-                        if( cell.toString().contains( "TOTAL" ))
-                        {
-                            cell = row.getCell( TOTAL_CELL_BATTERIES );
-                            order.setBatteriesTotal( getNumericValueFromCell( cell ));
-
-                            cell = row.getCell( TOTAL_CELL_PALLETS );
-                            order.setPalletsTotal( getNumericValueFromCell( cell ));
-
-                            break;
-                        }
-                    }
-                    break;
-                }
-
+                // Position DTO
                 Position position = new Position();
 
                 // A23 - item name
+                cell = row.getCell( POSITIONS_CELL_ITEM_NAME );
                 position.setItemName( cell.getStringCellValue() );
-
 
                 // B23 - barcode
                 cell = row.getCell( POSITIONS_CELL_ITEM_BARCODE );
                 position.setItemBarcode( getStringValueFromCell( cell ));
 
-
                 // C23 - battery count
                 cell = row.getCell( POSITIONS_CELL_BATTERIES_TOTAL );
                 position.setBatteryCount( getNumericValueFromCell( cell ));
-
 
                 // G23 - pallet count
                 cell = row.getCell( POSITIONS_CELL_PALLET_TOTAL );
                 position.setPalletCount( getNumericValueFromCell( cell ));
 
-
                 // Add item to position list of result DTO
                 order.getPositions().add( position );
-            }
 
+                rowNum++;
+            }
+            while ( !getStringValueFromCell( sheet.getRow( rowNum ).getCell( POSITIONS_CELL_ITEM_NAME )).isEmpty() );
+
+
+            // Try find "TOTAL" row
+            int rowEnd = sheet.getLastRowNum();
+            for( int rowTotal = rowNum; rowTotal < rowEnd; rowTotal++ )
+            {
+                Row row = sheet.getRow( rowTotal );
+                cell = row.getCell( TOTAL_CELL_NAME );
+
+                if( cell.toString().contains( "TOTAL" ))
+                {
+                    cell = row.getCell( TOTAL_CELL_BATTERIES );
+                    order.setBatteriesTotal( getNumericValueFromCell( cell ));
+
+                    cell = row.getCell( TOTAL_CELL_PALLETS );
+                    order.setPalletsTotal( getNumericValueFromCell( cell ));
+
+                    break;
+                }
+            }
             System.out.println( order );
             excelBook.close();
         }
